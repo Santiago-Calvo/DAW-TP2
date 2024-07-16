@@ -11,6 +11,11 @@ const postalCodeInput = document.getElementById('postal-code');
 const dniInput = document.getElementById('dni');
 const formTitle = document.getElementById('form-title');
 
+const closeButton = document.querySelector('.close');
+closeButton.addEventListener('click', function () {
+    modal.classList.remove('show');
+});
+
 function showError(input, message) {
     const formGroup = input.parentElement;
     const errorMessage = formGroup.querySelector('.error-message');
@@ -194,7 +199,7 @@ form.addEventListener('submit', function (event) {
             postalCode: postalCodeInput.value.trim(),
             dni: dniInput.value.trim()
         };
-        alert('Formulario enviado:\n\n' + JSON.stringify(formData, null, 2));
+        sendFormData(formData);
     } else {
 
         const errorMessage = 'Por favor, corrija los siguientes errores:\n\n' +
@@ -211,3 +216,67 @@ form.addEventListener('submit', function (event) {
         alert(errorMessage);
     }
 });
+
+function sendFormData(formData) {
+    const url = 'https://jsonplaceholder.typicode.com/users?' + new URLSearchParams(formData).toString();
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            Modal(data, true);
+            saveDataToLocalStorage(data);
+        })
+        .catch(error => {
+            Modal(error, false);
+        });
+}
+
+
+function Modal(data, success) {
+    const modal = document.getElementById('modal');
+    const modalContent = document.getElementById('modal-content');
+
+    if (success) {
+        modalContent.innerHTML = `
+            <h3>¡Suscripción exitosa!</h3>
+            <p>Datos recibidos:</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+    } else {
+        modalContent.innerHTML = `
+            <h3>Error en la suscripción</h3>
+            <p>Detalles del error:</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+    }
+
+    modal.classList.add('show');
+}
+
+function saveDataToLocalStorage(data) {
+    localStorage.setItem('subscriptionData', JSON.stringify(data));
+}
+
+window.addEventListener('load', function () {
+    const savedData = localStorage.getItem('subscriptionData');
+
+    if (savedData) {
+        const formData = JSON.parse(savedData);
+        fillFormFields(formData);
+    }
+});
+
+
+function fillFormFields(formData) {
+    nameInput.value = formData.name || '';
+    emailInput.value = formData.email || '';
+    passwordInput.value = formData.password || '';
+    confirmPasswordInput.value = formData.password || '';
+    ageInput.value = formData.age || '';
+    phoneInput.value = formData.phone || '';
+    addressInput.value = formData.address || '';
+    cityInput.value = formData.city || '';
+    postalCodeInput.value = formData.postalCode || '';
+    dniInput.value = formData.dni || '';
+}
+
